@@ -1,0 +1,105 @@
+---
+title: "BridgeDbR Tutorial"
+author: "Egon Willighagen"
+package: BridgeDbR
+output: 
+  BiocStyle::html_document:
+    toc_float: true
+    includes:
+      in_header: bioschemas.html
+vignette: >
+  %\VignetteIndexEntry{RMassBank walkthrough}
+  % \VignettePackage{rcdk}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}  
+bibliography: tutorial.bib
+csl: biomed-central.csl
+references:
+- id: dummy
+  title: no title
+  author:
+  - family: noname
+    given: noname
+---
+
+# Introduction
+
+`RMassBank` is a two-part computational mass spectrometry workflow:
+
+* In the first step, MSMS spectra of compounds are extracted from raw LC-MS data files, 
+  the MSMS spectra are recalibrated using assigned fragment formulas, and effectively 
+  denoised by using only annotated peaks (plus peaks which can be manually added.)
+* In the second step, the processed, recalibrated, cleaned data is prepared for 
+  submission to a MassBank database. Compounds are first automatically annotated using 
+  information from the Chemical Translation Service (CTS). After manually checking and 
+  fixing the annotations, the information is compiled together with the spectral data
+  into MassBank records, which can then be uploaded to a MassBank database.
+
+This vignette describes basic usage with the standard workflow. The package is
+flexible and allows for different advanced use cases. Examples of specialized
+applications of `RMassBank` are available at the `RMassBank` message board hosted
+by the [Metabolomics-Forum](http://www.metabolomics-forum.com/viewforum.php?f=29).
+
+# Installation and loading
+
+The library is available from [Bioconductor](http://www.bioconductor.org).
+In addition to the library itself, it is recommended to install the OpenBabel
+chemical toolkit, available from [openbabel.org](http://www.openbabel.org) for various
+platforms (or via Linux package distribution systems).
+
+The library is loaded as follows
+
+```{r}
+library(RMassBank)
+```
+
+The data used in the following example is available as a package `RMassBankData`,
+which must be installed separately and is loaded using 
+
+```{r}
+library(RMassBankData)
+``` 
+
+# Input files
+
+## LC/MS data
+
+`RMassBank` handles high-resolution LC/MS spectra in mzML format in
+centroid (**The term "centroid" here refers to any kind of data which are
+not in profile mode, i.e. don't have continuous m/z data. It does not refer to
+the (mathematical) centroid peak, i.e. the area-weighted mass peak.**) or in
+profile mode.
+Data in the examples was acquired using an LTQ Orbitrap XL instrument in profile
+mode, and converted from profile-mode RAW into centroid-mode mzML
+using MSConvertGUI from ProteoWizard. The settings were as shown in the 
+screenshot below (note the "Peak Picking" filter.)
+
+![](graphics/proteowiz.PNG) <br />
+ProteoWiz settings for conversion to mzML
+
+In the standard workflow, the file names are used to identify a
+compound: file names must be in the format `xxxxxxxx_1234_xxx.mzXML`,
+where the xxx parts denote anything and the 1234 part denotes the compound ID in
+the compound list (see below). Advanced and alternative uses can be implemented;
+consult the implementation of `msms_workflow`  and `findMsMsHR` for
+more information.
+
+## Compound list
+
+A compound list in CSV format is required to identify all compounds unambiguously. 
+The CSV file is required to have at least the following columns, which are used for 
+further processing and must be named correctly (but present in any order): `ID, Name, SMILES, RT,
+CAS`. The columns `ID` and `SMILES` must be filled, the other columns
+must be present in the file but do not need to be filled.
+`ID` specifies an (arbitrary) numeric ID code which must be < 4 digits long; `SMILES` specifies
+a SMILES code with the chemical structure of the compound (and is used to extract the
+molecular formula, for calculation of molecular masses, for database searching in CTS etc.) 
+Although the columns `Name, RT, CAS` have to be present, the
+information in the columns is only used if the cells are filled.
+RT, if present, specifies the retention time (in minutes; $\pm$ a window specified in the RMassBank options, see below)
+where a LC/MS file is searched for the compound spectra. `CAS` and `Name`
+are used as additional information while retrieving annotations from CTS. The
+compound list doesn't have to be ordered in any particular way. It can contain large numbers of compounds,
+even compounds which will not be actively used by the script (Note: Unused compounds
+don't require a SMILES code, since they will not be accessed.)
+
