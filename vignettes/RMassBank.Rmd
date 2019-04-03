@@ -56,16 +56,16 @@ which must be installed separately and is loaded using
 
 ```{r}
 library(RMassBankData)
-``` 
+```
 
 # Input files
 
 ## LC/MS data
 
 `RMassBank` handles high-resolution LC/MS spectra in mzML format in
-centroid (**The term "centroid" here refers to any kind of data which are
+centroid (*The term "centroid" here refers to any kind of data which are
 not in profile mode, i.e. don't have continuous m/z data. It does not refer to
-the (mathematical) centroid peak, i.e. the area-weighted mass peak.**) or in
+the (mathematical) centroid peak, i.e. the area-weighted mass peak.*) or in
 profile mode.
 Data in the examples was acquired using an LTQ Orbitrap XL instrument in profile
 mode, and converted from profile-mode RAW into centroid-mode mzML
@@ -94,10 +94,51 @@ a SMILES code with the chemical structure of the compound (and is used to extrac
 molecular formula, for calculation of molecular masses, for database searching in CTS etc.) 
 Although the columns `Name, RT, CAS` have to be present, the
 information in the columns is only used if the cells are filled.
-RT, if present, specifies the retention time (in minutes; $\pm$ a window specified in the RMassBank options, see below)
+RT, if present, specifies the retention time (in minutes; ± a window specified in the RMassBank options, see below)
 where a LC/MS file is searched for the compound spectra. `CAS` and `Name`
 are used as additional information while retrieving annotations from CTS. The
 compound list doesn't have to be ordered in any particular way. It can contain large numbers of compounds,
 even compounds which will not be actively used by the script (Note: Unused compounds
 don't require a SMILES code, since they will not be accessed.)
 
+An example list is provided with the \Rpackage{RMassBankData} package, and can be copied into a local folder, viewed and edited:
+
+```{r}
+file.copy(system.file("list/NarcoticsDataset.csv", 
+	package="RMassBankData"), "./Compoundlist.csv")
+```
+
+## Settings
+
+A number of different settings influence RMassBank. They are partly parameters for data processing and partly constants used for annotation.
+
+A settings template file, to be edited by hand, can be generated using
+
+```{r}
+RmbSettingsTemplate("mysettings.ini")
+```
+
+where `mysettings.ini` is the file that will be generated. This file
+should then be edited. Important settings are:
+
+* deprofile: Whether to use a deprofiling algorithm to work
+  with profile-mode data. Default is `NA` for use with centroid-mode
+  data. Allowed settings for profile-mode data include `deprofile.fwhm` (full-width half-maximum
+  algorithm), `deprofile.spline` (cubic spline algorithm),
+  `deprofile.localmax` (local maximum). See the respective help pages for
+  detailed information.
+* `rtMargin`: The deviation allowed for retention times (in minutes) when
+  extracting spectra from raw data files.
+* `rtShift`: The systematic retention time shift (in minutes) in
+  the LC-MS data compared to the values in the compound list.
+* `babeldir`: The directory pointing to the OpenBabel binaries.
+* `use\_version`: which MassBank data format to use. The default is the newer
+   version 2; alternatively, the (deprecated) version 1 can be specified for
+   MassBank servers running old versions of the server software.
+
+FIXME: MANY ITEMS MISSING
+
+See also the manpage `?RmbSettings` for a description of all RMassBank
+settings.
+
+# The workflow
