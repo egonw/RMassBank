@@ -1,7 +1,7 @@
 ---
-title: "BridgeDbR Tutorial"
-author: "Egon Willighagen"
-package: BridgeDbR
+title: "RMassBank walkthrough"
+author: "Michael Stravs, Emma Schymanski"
+package: RMassBank
 output: 
   BiocStyle::html_document:
     toc_float: true
@@ -12,8 +12,6 @@ vignette: >
   % \VignettePackage{rcdk}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}  
-bibliography: tutorial.bib
-csl: biomed-central.csl
 references:
 - id: dummy
   title: no title
